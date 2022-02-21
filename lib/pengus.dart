@@ -7,7 +7,7 @@ import 'package:pengus_basket/gulls.dart';
 
 class Pengus extends SpriteComponent with HasHitboxes, Collidable {
   Pengus() : super(){
-    final shape = HitboxRectangle();
+    final shape = HitboxRectangle(relation: Vector2.all(0.6));
     addHitbox(shape);
   }
 
@@ -16,9 +16,18 @@ class Pengus extends SpriteComponent with HasHitboxes, Collidable {
     super.onCollision(intersectionPoints, other);
     if (other is Gulls){
       HIT_GULL = true;
+      LIFE--;
     }
     else if(other is Fish){
       EAT_FISH = true;
+      SCORE++;
     }
   }
+  /*
+  @override
+  void render(Canvas canvas){
+    super.render(canvas);
+    renderHitboxes(canvas);
+  }
+   */ // hitbox render
 }

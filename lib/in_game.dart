@@ -11,8 +11,7 @@ class InGame extends FlameGame with  HasCollidables{
   SpriteComponent background = SpriteComponent();
   SpriteComponent bad = SpriteComponent();
   SpriteComponent good = SpriteComponent();
-  Gulls gulls = Gulls();
-  Fish fish = Fish();
+
   Pengus pengus = Pengus();
 
   String direction = 'default';
@@ -20,9 +19,15 @@ class InGame extends FlameGame with  HasCollidables{
   List<String> fishList = ['fish1.png', 'fish2.png','fish3.png','fish4.png','fish5.png','fish6.png' ];
   List<String> gullList = ['gull1.png', 'gull2.png'];
 
+  Timer gullsSpawn = Timer(1.5, repeat: true);
+  Timer fishSpawn = Timer (1.6, repeat: true);
+
   @override
   Future<void> onLoad() async{
     super.onLoad();
+
+    SCREEN_W = size[0];
+    SCREEN_H = size[1];
     // background 생성
     add(
       background
@@ -39,22 +44,31 @@ class InGame extends FlameGame with  HasCollidables{
 
 
     // gull 생성
-    int gullIndex = Random().nextInt(gullList.length);
-    Random randomGull_x = Random();
-    gulls
-      ..sprite = await loadSprite(gullList[gullIndex])
-      ..size = Vector2(FISH_W, FISH_H)
-      ..position = Vector2(randomGull_x.nextDouble() * size[0], 0);
-    add(gulls);
+    gullsSpawn.onTick = () async {
+      Gulls gulls = Gulls();
+      int gullIndex = Random().nextInt(gullList.length);
+      Random randomGull_x = Random();
+      gulls
+        ..sprite = await loadSprite(gullList[gullIndex])
+        ..size = Vector2(FISH_W, FISH_H)
+        ..position = Vector2(randomGull_x.nextDouble() * size[0] , 0);
+      add(gulls);
+    };
+    gullsSpawn.start();
 
-    // fish 생성
-    int fishIndex = Random().nextInt(fishList.length);
-    Random randomFish_x = Random();
-    fish
-      ..sprite = await loadSprite(fishList[fishIndex])
-      ..size = Vector2(50, 50)
-      ..position = Vector2(randomFish_x.nextDouble() * size[0], 0);
-    add(fish);
+    fishSpawn.onTick = () async{
+      Fish fish = Fish();
+      int fishIndex = Random().nextInt(fishList.length);
+      Random randomFish_x = Random();
+      FISH_COUNT++;
+      print('fish 생성 ${FISH_COUNT}');
+      fish
+        ..sprite = await loadSprite(fishList[fishIndex])
+        ..size = Vector2(50, 50)
+        ..position = Vector2(randomFish_x.nextDouble() * size[0] , 0);
+      add(fish);
+    };
+    fishSpawn.start();
 
     // effect 생성
     good
@@ -73,7 +87,14 @@ class InGame extends FlameGame with  HasCollidables{
   @override
   void update(double dt){
     super.update(dt);
-    //
+
+    // fish 수급
+    if (FISH_COUNT <= FISH_MAX) {
+      fishSpawn.update(dt);
+    }
+
+    gullsSpawn.update(dt);
+
     if (HIT_GULL){
       add(bad);
       Future.delayed(Duration(seconds: 1),(){
@@ -84,7 +105,6 @@ class InGame extends FlameGame with  HasCollidables{
 
     if (EAT_FISH){
       add(good);
-
       Future.delayed(Duration(seconds: 1),(){
         remove(good);
         EAT_FISH = false;
@@ -92,18 +112,12 @@ class InGame extends FlameGame with  HasCollidables{
     }
 
     // sprite 경계
-    gulls.position.clamp(Vector2.zero(), size - gulls.size);
-    fish.position.clamp(Vector2.zero(), size - fish.size);
+    // gulls.position.clamp(Vector2.zero(), size - gulls.size);
+    //fish.position.clamp(Vector2.zero(), size - fish.size);
     pengus.position.clamp(Vector2.zero(), size - pengus.size);
 
-    double gullSpeed = 450;
-    gulls.position += Vector2(0, 1) * gullSpeed * dt;
-
-    double fishSpeed = 250;
-    fish.position += Vector2(0, 1) * fishSpeed * dt;
-
     // pengus 움직이기
-    double pengusSpeed = 200;
+    double pengusSpeed = 280;
     switch (direction){
       case 'right':
         pengus.position += Vector2(1, 0) * pengusSpeed * dt;
